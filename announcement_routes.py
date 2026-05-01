@@ -4,7 +4,6 @@ from datetime import datetime
 
 announcement_bp = Blueprint('announcement', __name__)
 
-
 @announcement_bp.route('/announcements')
 def list_announcements():
     """List all announcements"""
