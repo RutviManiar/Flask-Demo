@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Report</h2>
+    <a href="{{ url_for('index') }}" class="btn btn-secondary">Back to Home</a>
+  </div>
+
+  {% for dept in depts %}
+  <div class="card mb-4 shadow-sm">
+    <div class="card-header bg-success text-white">
+      <div class="d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">{{ dept.dname }}</h5>
+        <span>Location: {{ dept.loc }}</span>
+        <span>Created Date: {{ dept.created_date.strftime('%Y-%m-%d') if dept.created_date else 'N/A' }}</span>
+      </div>
+    </div>
+    <div class="card-body p-0">
+      {% set active_emps = dept.employees | selectattr('is_deleted', 'equalto', false) | list %}
+      {% if active_emps %}
+      <table class="table mb-0 table-bordered">
+        <thead class="table-light">
+          <tr>
+            <th>Emp No</th>
+            <th>Name</th>
+            <th>Salary</th>
+            <th>Email</th>
+            <th>Phone</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for emp in active_emps %}
+          <tr>
+            <td>{{ emp.eno }}</td>
+            <td>{{ emp.ename }}</td>
+            <td>{{ emp.sal }}</td>
+            <td>{{ emp.email }}</td>
+            <td>{{ emp.phone }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p class="p-3 text-muted mb-0">No employees in this department.</p>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+{% endblock %}

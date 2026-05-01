@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h2>Departments</h2>
+  <a href="{{ url_for('dept.add_dept') }}" class="btn btn-success">+ Add Department</a>
+</div>
+
+<table class="table table-bordered table-striped">
+  <thead class="table-primary">
+    <tr>
+      <th>ID</th>
+      <th>Name</th>
+      <th>Location</th>
+      <th>Created Date</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for d in depts %}
+    <tr>
+      <td>{{ d.id }}</td>
+      <td>{{ d.dname }}</td>
+      <td>{{ d.loc }}</td>
+      <td>{{ d.created_date }}</td>
+        <td>
+          <a href="{{ url_for('dept.edit_dept', id=d.id) }}" class="btn btn-warning btn-sm">Edit</a>
+          {% if d.employees|length == 0 %}
+          <a href="{{ url_for('dept.delete_dept', id=d.id) }}" class="btn btn-danger btn-sm"
+             onclick="return confirm('Are you sure you want to delete this department?');">Delete</a>
+          {% else %}
+          <button type="button" class="btn btn-danger btn-sm" disabled title="Cannot delete department while it has employees">Delete</button>
+          {% endif %}
+        </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <a href="{{ url_for('index') }}" class="btn btn-success">Back</a>
+</div>
+{% endblock %}

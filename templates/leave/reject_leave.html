@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header">
+        <h4 class="mb-0">Reject Leave Application</h4>
+      </div>
+      <div class="card-body">
+        <div class="alert alert-warning">
+          <strong>Leave Application Details:</strong><br>
+          Employee: {{ leave.employee.ename }}<br>
+          Type: {{ leave.leave_type|title }}<br>
+          Dates: {{ leave.start_date.strftime('%Y-%m-%d') }} to {{ leave.end_date.strftime('%Y-%m-%d') }}{% if leave.is_half_day %} (Half-day){% endif %}<br>
+          Days: {{ leave.days_requested }}{% if leave.days_requested == 0.5 %} (Half-day){% endif %}<br>
+          Reason: {{ leave.reason or 'Not provided' }}
+        </div>
+
+        <form method="POST">
+          <div class="mb-3">
+            <label for="rejection_reason" class="form-label">Rejection Reason *</label>
+            <textarea class="form-control" id="rejection_reason" name="rejection_reason" rows="3" required placeholder="Please provide a reason for rejecting this leave application"></textarea>
+          </div>
+
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-danger">Reject Application</button>
+            <a href="{{ url_for('leave.list_leaves') }}" class="btn btn-secondary">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

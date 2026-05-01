@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h2>Employees</h2>
+  <a href="{{ url_for('emp.add_emp') }}" class="btn btn-success">+ Add Employee</a>
+</div>
+
+<table class="table table-bordered table-striped">
+  <thead class="table-success">
+    <tr>
+      <th>ID</th>
+      <th>Photo</th>
+      <th>Name</th>
+      <th>Salary</th>
+      <th>Department</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for e in emps %}
+    <tr>
+      <td>{{ e.eno }}</td>
+      <td>
+        {% if e.image %}
+          <img src="{{ url_for('emp.emp_image', eno=e.eno) }}" alt="Profile" class="rounded" style="width:40px; height:40px; object-fit:cover;">
+        {% else %}
+          —
+        {% endif %}
+      </td>
+      <td>{{ e.ename }}</td>
+      <td>{{ e.sal }}</td>
+      <td>{{ e.department.dname }}</td>
+      <td>
+        <a href="{{ url_for('emp.edit_emp', eno=e.eno) }}" class="btn btn-warning btn-sm">Edit</a>
+        <a href="{{ url_for('emp.delete_emp', eno=e.eno) }}" class="btn btn-danger btn-sm"
+           onclick="return confirm('Are you sure you want to delete this employee?');">Delete</a>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <a href="{{ url_for('index') }}" class="btn btn-success">Back</a>
+</div>
+{% endblock %}

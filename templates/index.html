@@ -1,0 +1,301 @@
+{% extends "base.html" %}
+{% block content %}
+
+{% if is_admin %}
+  <!-- ADMIN DASHBOARD -->
+  <div class="text-center mt-5">
+    <h1 class="mb-4">Flask CRUD Dashboard</h1>
+    <a href="{{ url_for('dept.list_depts') }}" class="btn btn-primary btn-lg me-2">Manage Departments</a>
+    <a href="{{ url_for('emp.list_emps') }}" class="btn btn-primary btn-lg me-2">Manage Employees</a>
+    <a href="{{ url_for('att.list_attendance') }}" class="btn btn-primary btn-lg me-2">Manage Attendance</a>
+    <a href="{{ url_for('payroll.list_payroll') }}" class="btn btn-primary btn-lg me-2">Manage Payroll</a>
+    <a href="{{ url_for('leave.list_leaves') }}" class="btn btn-primary btn-lg me-2">Manage Leave</a>
+    <a href="{{ url_for('chatbot.home') }}" class="btn btn-primary btn-lg me-2">Chatbot</a>
+  </div>
+
+  <div class="row mt-5">
+    <div class="col-md-3 mb-3">
+      <div class="card border-primary h-100">
+        <div class="card-body">
+          <h5 class="card-title">Total employees</h5>
+          <p class="card-text display-6">{{ total_employees }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 mb-3">
+      <div class="card border-success h-100">
+        <div class="card-body">
+          <h5 class="card-title">Total departments</h5>
+          <p class="card-text display-6">{{ total_departments }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 mb-3">
+      <div class="card border-warning h-100">
+        <div class="card-body">
+          <h5 class="card-title">Avg salary</h5>
+          <p class="card-text display-6">{{ '%.2f'|format(avg_salary) }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row mt-4">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Employees per department</h5>
+          <table class="table table-striped">
+            <thead>
+              <tr>
+                <th>Department</th>
+                <th>Employee Count</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for dept, count in employees_per_department %}
+              <tr>
+                <td>{{ dept }}</td>
+                <td>{{ count }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Announcements Section (Admin) -->
+  <div class="row mt-4">
+    <div class="col-12">
+      <div class="card border-info">
+        <div class="card-header bg-info text-white">
+          <h5 class="mb-0">
+            📢 Recent Announcements
+            <a href="{{ url_for('announcement.list_announcements') }}" class="btn btn-outline-light btn-sm float-end">View All</a>
+          </h5>
+        </div>
+        <div class="card-body">
+          {% if recent_announcements %}
+            <div class="announcement-list">
+              {% for announcement in recent_announcements %}
+                <div class="mb-3 pb-3 border-bottom">
+                  <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                      <h6 class="mb-1">
+                        <a href="{{ url_for('announcement.view_announcement', announcement_id=announcement.id) }}" class="text-decoration-none">
+                          {{ announcement.title }}
+                        </a>
+                      </h6>
+                      <small class="text-muted">
+                        <strong>By:</strong> {{ announcement.creator.ename }} | 
+                        <strong>Posted:</strong> {{ announcement.created_at.strftime('%Y-%m-%d %H:%M') }}
+                      </small>
+                      <p class="card-text mt-2">{{ announcement.content[:100] }}...</p>
+                      <div class="d-flex gap-2 align-items-center">
+                        <a href="{{ url_for('announcement.view_announcement', announcement_id=announcement.id) }}" class="btn btn-sm btn-outline-primary">
+                          Read & Comment
+                        </a>
+                        <span class="badge bg-info">{{ announcement.get_comment_count() }} 💬</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <p class="text-muted mb-0">No announcements yet.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+{% else %}
+  <!-- EMPLOYEE DASHBOARD -->
+  <div class="row">
+    <div class="col-md-8">
+      <h1 class="mb-4">Welcome, {{ current_user.ename }}! 👋</h1>
+      
+      <!-- Employee Profile Card -->
+      <div class="card mb-4 shadow">
+        <div class="card-header bg-primary text-white">
+          <h5 class="mb-0">👤 Your Profile</h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-3 text-center">
+              {% if current_user.image %}
+                <img src="{{ url_for('emp_image', eno=current_user.eno) }}" alt="Profile" class="img-fluid rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
+              {% else %}
+                <div class="bg-light rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 150px; height: 150px;">
+                  <span class="text-muted text-center">No Photo</span>
+                </div>
+              {% endif %}
+            </div>
+            <div class="col-md-9">
+              <table class="table table-borderless">
+                <tr>
+                  <td><strong>Name:</strong></td>
+                  <td>{{ current_user.ename }}</td>
+                </tr>
+                <tr>
+                  <td><strong>Employee ID:</strong></td>
+                  <td>#{{ current_user.eno }}</td>
+                </tr>
+                <tr>
+                  <td><strong>Email:</strong></td>
+                  <td>{{ current_user.email or 'Not provided' }}</td>
+                </tr>
+                <tr>
+                  <td><strong>Phone:</strong></td>
+                  <td>{{ current_user.phone or 'Not provided' }}</td>
+                </tr>
+                <tr>
+                  <td><strong>Department:</strong></td>
+                  <td>
+                    {% if current_user.deptid %}
+                      {% set dept = current_user.__dict__.get('deptid') %}
+                      {{ current_user.department.dname if current_user.department else 'Unknown' }}
+                    {% else %}
+                      <span class="text-muted">Not assigned</span>
+                    {% endif %}
+                  </td>
+                </tr>
+                <tr>
+                  <td><strong>Salary:</strong></td>
+                  <td>
+                    {% if current_user.sal %}
+                      ${{ '%.2f'|format(current_user.sal) }}
+                    {% else %}
+                      <span class="text-muted">Not set</span>
+                    {% endif %}
+                  </td>
+                </tr>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Stats -->
+      <div class="row mb-4">
+        <div class="col-md-6">
+          <div class="card border-info">
+            <div class="card-body text-center">
+              <h6 class="card-title">📌 Employee ID</h6>
+              <p class="card-text display-6">#{{ current_user.eno }}</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="card border-success">
+            <div class="card-body text-center">
+              <h6 class="card-title">💰 Salary</h6>
+              <p class="card-text display-6">${{ '%.0f'|format(current_user.sal or 0) }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-md-4">
+      <!-- Leave Balance Card -->
+      <div class="card shadow mb-4 border-success">
+        <div class="card-header bg-success text-white">
+          <h5 class="mb-0">📅 Leave Balance</h5>
+        </div>
+        <div class="card-body">
+          {% for leave_type, balance in leave_balances.items() %}
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <span class="text-capitalize">{{ leave_type }}</span>
+            <span class="badge bg-light text-dark">{{ balance }} days</span>
+          </div>
+          {% endfor %}
+          <div class="mt-3">
+            <a href="{{ url_for('leave.list_leaves') }}" class="btn btn-success btn-sm w-100">Manage Leave</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="card shadow mb-4 border-warning">
+        <div class="card-header bg-warning text-dark">
+          <h5 class="mb-0">⚡ Quick Links</h5>
+        </div>
+        <div class="card-body">
+          <div class="d-grid gap-2">
+            <a href="{{ url_for('emp.edit_emp', eno=current_user.eno) }}" class="btn btn-outline-info">
+              ✏️ Edit My Profile
+            </a>
+            <a href="{{ url_for('leave.list_leaves') }}" class="btn btn-outline-success">
+              📅 My Leave
+            </a>
+            <a href="{{ url_for('announcement.list_announcements') }}" class="btn btn-outline-primary">
+              📢 View All Announcements
+            </a>
+            <a href="{{ url_for('chatbot.home') }}" class="btn btn-outline-secondary">
+              🤖 Chatbot
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="card shadow border-secondary">
+        <div class="card-header bg-secondary text-white">
+          <h5 class="mb-0">ℹ️ Company Info</h5>
+        </div>
+        <div class="card-body">
+          <p class="mb-2"><strong>Role:</strong> <span class="badge bg-info">{{ current_user.role.upper() }}</span></p>
+          <p class="mb-0"><strong>Status:</strong> <span class="badge bg-success">Active</span></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Announcements for Employee -->
+  <div class="row mt-4">
+    <div class="col-12">
+      <div class="card border-info">
+        <div class="card-header bg-info text-white">
+          <h5 class="mb-0">
+            📢 Recent Announcements
+            <a href="{{ url_for('announcement.list_announcements') }}" class="btn btn-outline-light btn-sm float-end">View All</a>
+          </h5>
+        </div>
+        <div class="card-body">
+          {% if recent_announcements %}
+            <div class="announcement-list">
+              {% for announcement in recent_announcements %}
+                <div class="mb-3 pb-3 border-bottom">
+                  <h6 class="mb-1">
+                    <a href="{{ url_for('announcement.view_announcement', announcement_id=announcement.id) }}" class="text-decoration-none">
+                      {{ announcement.title }}
+                    </a>
+                  </h6>
+                  <small class="text-muted">
+                    <strong>By:</strong> {{ announcement.creator.ename }} | 
+                    <strong>Posted:</strong> {{ announcement.created_at.strftime('%Y-%m-%d %H:%M') }}
+                  </small>
+                  <p class="card-text mt-2">{{ announcement.content[:100] }}...</p>
+                  <div class="d-flex gap-2 align-items-center">
+                    <a href="{{ url_for('announcement.view_announcement', announcement_id=announcement.id) }}" class="btn btn-sm btn-outline-primary">
+                      Read & Comment
+                    </a>
+                    <span class="badge bg-info">{{ announcement.get_comment_count() }} 💬</span>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <p class="text-muted mb-0">No announcements yet. Check back soon!</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+{% endif %}
+
+{% endblock %}

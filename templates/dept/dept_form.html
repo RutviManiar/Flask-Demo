@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card shadow p-4">
+  <h3 class="mb-4">{{ action }} Department</h3>
+  <form method="POST">
+    {% if next_url %}
+      <input type="hidden" name="next" value="{{ next_url }}">
+    {% endif %}
+    <div class="mb-3">
+      <label class="form-label">Department Name</label>
+      <input type="text" name="dname" class="form-control" value="{{ dept.dname if dept else '' }}" required>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Location</label>
+      <input type="text" name="loc" class="form-control" value="{{ dept.loc if dept else '' }}">
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Created Date</label>
+      <input
+        type="date"
+        name="created_date"
+        class="form-control"
+        value="{{ dept.created_date.isoformat() if dept and dept.created_date else '' }}"
+      >
+    </div>
+    <button type="submit" class="btn btn-primary">{{ action }}</button>
+    <a href="{{ next_url or url_for('dept.list_depts') }}" class="btn btn-secondary">Cancel</a>
+  </form>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const dateInput = document.querySelector('input[name="created_date"]');
+    if (!dateInput) return;
+    const today = new Date().toISOString().split('T')[0];
+    dateInput.max = today;
+  });
+</script>
+
+{% endblock %}

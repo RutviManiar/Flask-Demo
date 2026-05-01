@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="mb-3">
+  {% if session.get('user_role') == 'user' and action == 'Edit' %}
+    <a href="{{ url_for('index') }}" class="btn btn-outline-secondary btn-sm">← Back to Dashboard</a>
+  {% else %}
+    <a href="{{ url_for('emp.list_emps') }}" class="btn btn-outline-secondary btn-sm">← Back to Employees</a>
+  {% endif %}
+</div>
+<div class="card shadow p-4">
+  <h3 class="mb-4">{{ action }} Employee</h3>
+  {% if error %}
+  <div class="alert alert-danger" role="alert">
+    {{ error }}
+  </div>
+  {% endif %}
+  <form method="POST" enctype="multipart/form-data">
+    <div class="mb-3">
+      <label class="form-label">Employee Name</label>
+      <input type="text" name="ename" class="form-control" value="{{ emp.ename if emp else '' }}" required>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Salary</label>
+      <input
+        type="number"
+        step="10"
+        name="sal"
+        class="form-control"
+        value="{{ emp.sal if emp else 0 }}"
+        {% if session.get('user_role') == 'user' %}disabled{% endif %}
+      >
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Email</label>
+      <input type="email" name="email" class="form-control" value="{{ emp.email if emp else '' }}">
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Phone</label>
+      <input type="tel" name="phone" class="form-control" value="{{ emp.phone if emp else '' }}">
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Profile Image</label>
+      {% if emp and emp.image %}
+      <div class="mb-2">
+        <img src="{{ url_for('emp.emp_image', eno=emp.eno) }}" class="img-thumbnail" style="max-width: 150px;" alt="Profile image">
+      </div>
+      {% endif %}
+      <input type="file" name="image" class="form-control" accept="image/*">
+      <small class="text-muted">Upload a profile picture (optional).</small>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Password</label>
+      <input type="password" name="password" class="form-control" value="">
+      {% if emp %}<small class="text-muted">Leave blank to keep existing password.</small>{% endif %}
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Role</label>
+      <select name="role" class="form-select" required {% if session.get('user_role') == 'user' %}disabled{% endif %}>
+        <option value="user" {% if emp and emp.role == 'user' %}selected{% endif %}>User</option>
+        <option value="admin" {% if emp and emp.role == 'admin' %}selected{% endif %}>Admin</option>
+      </select>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Department</label>
+      <div class="d-flex gap-2">
+        <select name="deptid" class="form-select" required {% if session.get('user_role') == 'user' %}disabled{% endif %}>
+          {% for d in depts %}
+            <option value="{{ d.id }}" {% if emp and emp.deptid == d.id %}selected{% endif %}>{{ d.dname }}</option>
+          {% endfor %}
+        </select>
+        {% if session.get('user_role') != 'user' %}
+        <a href="{{ url_for('dept.add_dept', next=request.url) }}" class="btn btn-success">+ Add department</a>
+        {% endif %}
+      </div>
+    </div>
+    <div class="d-flex gap-2">
+      <button type="submit" class="btn btn-primary">{{ action }}</button>
+      {% if session.get('user_role') == 'user' and emp %}
+        <a href="{{ url_for('index') }}" class="btn btn-secondary">← Back to Dashboard</a>
+      {% else %}
+        <a href="{{ url_for('emp.list_emps') }}" class="btn btn-secondary">← Back to Employees</a>
+      {% endif %}
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card shadow p-4">
+  <h3 class="mb-4">{{ action }} Attendance</h3>
+  {% if error %}
+  <div class="alert alert-danger" role="alert">
+    {{ error }}
+  </div>
+  {% endif %}
+<form method="POST">
+    <div class="mb-3">
+    <label class="form-label">Employee:</label>
+    <select name="emp_id" class="form-select">
+    {% for emp in emps %}
+    <option value="{{ emp.eno }}"
+        {% if att and emp.eno == att.emp_id %}selected{% endif %}>
+        {{ emp.ename }}
+    </option>
+    {% endfor %}
+</select>
+    </div>
+    <div class="mb-3">
+    <label class="form-label">Month:</label>
+<select name="month" class="form-select" required>
+    <option value="">Select Month</option>
+    {% for m in ["January","February","March","April","May","June","July","August","September","October","November","December"] %}
+    <option value="{{ m }}"
+        {% if att and att.month == m %}selected{% endif %}>
+        {{ m }}
+    </option>
+    {% endfor %}
+</select>
+</div>
+
+<div class="mb-3">
+    <label class="form-label">Year:</label>
+<select name="year" class="form-select" required>
+    <option value="">Select Year</option>
+    {% for y in years %}
+    <option value="{{ y }}"
+        {% if att and att.year == y %}selected{% endif %}>
+        {{ y }}
+    </option>
+    {% endfor %}
+</select>
+</div>
+<div class="mb-3">
+
+    <label class="form-label">Present Days:</label>
+    <input type="number" name="present_days" class="form-control" value="{{ att.present_days if att else '' }}">
+</div>
+
+    <button type="submit" class="btn btn-primary">{{ action }} </button>
+    {% if session.get('user_role') == 'user' and emp %}
+      <a href="{{ url_for('att.edit_att', id=emp.id) }}" class="btn btn-secondary">Cancel</a>
+    {% else %}
+      <a href="{{ url_for('att.list_attendance') }}" class="btn btn-secondary">Cancel</a>
+    {% endif %}
+</form>
+</div>
+{% endblock %}

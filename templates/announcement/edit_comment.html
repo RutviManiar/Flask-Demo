@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="row">
+    <div class="col-md-8 mx-auto">
+      <h1 class="mb-4">✏️ Edit Comment</h1>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ 'danger' if category == 'danger' else 'warning' }} alert-dismissible fade show" role="alert">
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <div class="card shadow">
+        <div class="card-body">
+          <div class="mb-4 p-3 bg-light rounded">
+            <p class="text-muted mb-0">On announcement: <strong>{{ comment.announcement.title }}</strong></p>
+          </div>
+
+          <form method="POST" action="{{ url_for('announcement.edit_comment', comment_id=comment.id) }}">
+            <div class="mb-3">
+              <label for="message" class="form-label">Comment</label>
+              <textarea class="form-control" id="message" name="message" rows="6" required>{{ comment.message }}</textarea>
+            </div>
+
+            <div class="d-flex gap-2">
+              <button type="submit" class="btn btn-warning btn-lg">💾 Update Comment</button>
+              <a href="{{ url_for('announcement.view_announcement', announcement_id=comment.announcement_id) }}" class="btn btn-secondary btn-lg">Cancel</a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

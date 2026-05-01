@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card shadow-sm p-4 mx-auto" style="max-width: 420px;">
+  <h3 class="mb-4 text-center">Login</h3>
+  {% if error %}
+  <div class="alert alert-danger" role="alert">{{ error }}</div>
+  {% endif %}
+  <form method="POST">
+    <div class="mb-3">
+      <label class="form-label">Email</label>
+      <input type="email" name="email" class="form-control" required>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Password</label>
+      <input type="password" name="password" class="form-control" required>
+    </div>
+    <button type="submit" class="btn btn-primary w-100">Login</button>
+  </form>
+
+  <hr class="my-4">
+  <div class="mb-3 text-center">
+    <h5>Login with Face</h5>
+    <p class="text-muted">Use your webcam and a saved profile image for quick login.</p>
+  </div>
+
+  <div class="mb-3">
+    <video id="faceVideo" class="w-100 rounded shadow-sm" autoplay playsinline style="background: #000; min-height: 220px;"></video>
+    <canvas id="faceCanvas" style="display: none;"></canvas>
+  </div>
+  <div class="d-grid gap-2 mb-3">
+    <button id="startCameraBtn" type="button" class="btn btn-outline-secondary">Start Camera</button>
+    <button id="captureFaceBtn" type="button" class="btn btn-success" disabled>Capture & Login</button>
+  </div>
+  <div id="faceLoginMessage" class="text-danger small"></div>
+
+  <script>
+    const startCameraBtn = document.getElementById('startCameraBtn');
+    const captureFaceBtn = document.getElementById('captureFaceBtn');
+    const faceVideo = document.getElementById('faceVideo');
+    const faceCanvas = document.getElementById('faceCanvas');
+    const faceLoginMessage = document.getElementById('faceLoginMessage');
+    let faceStream;
+
+    async function startCamera() {
+      faceLoginMessage.textContent = '';
+      try {
+        faceStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+        faceVideo.srcObject = faceStream;
+        captureFaceBtn.disabled = false;
+      } catch (error) {
+        faceLoginMessage.textContent = 'Unable to access camera. Please enable camera permissions.';
+      }
+    }
+
+    async function captureFace() {
+      if (!faceStream) {
+        faceLoginMessage.textContent = 'Camera is not started yet.';
+        return;
+      }
+      faceLoginMessage.textContent = 'Analyzing face, please wait...';
+      const width = faceVideo.videoWidth;
+      const height = faceVideo.videoHeight;
+      if (!width || !height) {
+        faceLoginMessage.textContent = 'Waiting for camera feed...';
+        return;
+      }
+      faceCanvas.width = width;
+      faceCanvas.height = height;
+      const context = faceCanvas.getContext('2d');
+      context.drawImage(faceVideo, 0, 0, width, height);
+      const imageDataUrl = faceCanvas.toDataURL('image/jpeg');
+
+      try {
+        const response = await fetch('{{ url_for("face_login") }}', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image: imageDataUrl }),
+        });
+        const result = await response.json();
+        if (response.ok && result.status === 'ok') {
+          window.location.href = result.redirect;
+          return;
+        }
+        faceLoginMessage.textContent = result.error || 'Face login failed.';
+      } catch (error) {
+        faceLoginMessage.textContent = 'Face login failed. Please try again.';
+      }
+    }
+
+    startCameraBtn.addEventListener('click', startCamera);
+    captureFaceBtn.addEventListener('click', captureFace);
+  </script>
+</div>
+{% endblock %}

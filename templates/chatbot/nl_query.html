@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card shadow-sm mx-auto" style="max-width: 1000px;">
+  <div class="card-header bg-primary text-white">
+    <div class="d-flex justify-content-between align-items-center">
+      <div>
+        <h4 class="mb-0">Natural Language SQL Query</h4>
+        <small>Type a plain-English filter and return matching employee rows.</small>
+      </div>
+      <a href="{{ url_for('chatbot.home') }}" class="btn btn-outline-light btn-sm">Back to Chat</a>
+    </div>
+  </div>
+  <div class="card-body">
+    <div class="mb-3">
+      <p class="mb-1">
+        Supported tables: <strong>emp</strong>, <strong>dept</strong>, <strong>payroll</strong>. Only SELECT queries are executed.
+      </p>
+      <p class="text-muted mb-0">
+        Source: <strong>{{ source }}</strong> converter. {% if source == 'fallback' %}Use Claude by installing the <code>anthropic</code> package and setting <code>ANTHROPIC_API_KEY</code>.{% endif %}
+      </p>
+    </div>
+
+    <form method="POST" class="row g-3">
+      <div class="col-12">
+        <textarea name="nl_query" class="form-control" rows="3" placeholder="Example: Show employees in IT with salary above 70k" required>{{ query_text }}</textarea>
+      </div>
+      <div class="col-md-3">
+        <button type="submit" class="btn btn-primary w-100">Convert and Run</button>
+      </div>
+    </form>
+
+    {% if error_message %}
+      <div class="alert alert-danger mt-4" role="alert">
+        {{ error_message }}
+      </div>
+    {% endif %}
+
+    {% if sql_text %}
+      <div class="mt-4">
+        <h5>Generated SQL</h5>
+        <pre class="bg-light p-3 border rounded">{{ sql_text }}</pre>
+      </div>
+    {% endif %}
+
+    {% if query_results is not none %}
+      <div class="mt-4">
+        <h5>Results ({{ query_results|length }})</h5>
+        {% if query_results %}
+          <div class="table-responsive">
+            <table class="table table-sm table-bordered align-middle">
+              <thead class="table-light">
+                <tr>
+                  {% for key in query_results[0].keys() %}
+                    <th>{{ key }}</th>
+                  {% endfor %}
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in query_results %}
+                  <tr>
+                    {% for value in row.values() %}
+                      <td>{{ value }}</td>
+                    {% endfor %}
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div class="alert alert-warning">No rows matched this query.</div>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

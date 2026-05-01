@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8">
+    <div class="card">
+      <div class="card-header">
+        <h4 class="mb-0">Apply for Leave</h4>
+      </div>
+      <div class="card-body">
+        <!-- Leave Balance Summary -->
+        <div class="row mb-4">
+          <div class="col-md-12">
+            <h5>Current Leave Balance</h5>
+          </div>
+          {% for leave_type, balance in balances.items() %}
+          <div class="col-md-2">
+            <div class="card bg-light">
+              <div class="card-body text-center">
+                <h6 class="card-title text-capitalize">{{ leave_type }}</h6>
+                <span class="h4 text-primary">{{ balance }}</span>
+                <small class="text-muted d-block">days</small>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+
+        <form method="POST">
+          <div class="mb-3">
+            <label for="leave_type" class="form-label">Leave Type *</label>
+            <select class="form-select" id="leave_type" name="leave_type" required>
+              <option value="">Select leave type</option>
+              <option value="annual">Annual Leave ({{ balances.annual }} days remaining)</option>
+              <option value="sick">Sick Leave ({{ balances.sick }} days remaining)</option>
+              <option value="personal">Personal Leave ({{ balances.personal }} days remaining)</option>
+              <option value="maternity">Maternity Leave ({{ balances.maternity }} days remaining)</option>
+              <option value="paternity">Paternity Leave ({{ balances.paternity }} days remaining)</option>
+            </select>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="start_date" class="form-label">Start Date *</label>
+                <input type="date" class="form-control" id="start_date" name="start_date" required min="{{ today }}">
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="end_date" class="form-label">End Date *</label>
+                <input type="date" class="form-control" id="end_date" name="end_date" required min="{{ today }}">
+              </div>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="is_half_day" name="is_half_day">
+              <label class="form-check-label" for="is_half_day">
+                Half-day leave (only available for single-day leave)
+              </label>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="reason" class="form-label">Reason</label>
+            <textarea class="form-control" id="reason" name="reason" rows="3" placeholder="Please provide a reason for your leave request"></textarea>
+          </div>
+
+          <div class="mb-3">
+            <div id="days_calculation" class="alert alert-info" style="display: none;">
+              <strong>Days Requested:</strong> <span id="days_count">0</span> days
+            </div>
+          </div>
+
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">Submit Application</button>
+            <a href="{{ url_for('leave.list_leaves') }}" class="btn btn-secondary">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Calculate days between dates
+function calculateDays() {
+  const startDate = new Date(document.getElementById('start_date').value);
+  const endDate = new Date(document.getElementById('end_date').value);
+  const isHalfDay = document.getElementById('is_half_day').checked;
+
+  if (startDate && endDate && endDate >= startDate) {
+    let daysDiff;
+    if (startDate.getTime() === endDate.getTime()) {
+      // Same day
+      daysDiff = isHalfDay ? 0.5 : 1;
+    } else {
+      // Multi-day
+      daysDiff = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24)) + 1;
+    }
+    document.getElementById('days_count').textContent = daysDiff;
+    document.getElementById('days_calculation').style.display = 'block';
+
+    // Enable/disable half-day checkbox based on date range
+    const halfDayCheckbox = document.getElementById('is_half_day');
+    if (startDate.getTime() === endDate.getTime()) {
+      halfDayCheckbox.disabled = false;
+      halfDayCheckbox.parentElement.style.opacity = '1';
+    } else {
+      halfDayCheckbox.checked = false;
+      halfDayCheckbox.disabled = true;
+      halfDayCheckbox.parentElement.style.opacity = '0.5';
+    }
+  } else {
+    document.getElementById('days_calculation').style.display = 'none';
+  }
+}
+
+// Add event listeners
+document.getElementById('start_date').addEventListener('change', calculateDays);
+document.getElementById('end_date').addEventListener('change', calculateDays);
+document.getElementById('is_half_day').addEventListener('change', calculateDays);
+
+// Set minimum date to today
+document.addEventListener('DOMContentLoaded', function() {
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('start_date').setAttribute('min', today);
+  document.getElementById('end_date').setAttribute('min', today);
+});
+</script>
+{% endblock %}
