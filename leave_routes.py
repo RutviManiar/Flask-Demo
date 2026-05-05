@@ -52,6 +52,24 @@ def list_leaves():
             balances[leave_type] = get_leave_balance(user_id, leave_type)
         return render_template('leave/leaves.html', leaves=leaves, is_admin=False, balances=balances)
 
+@leave_bp.route('/leave/<int:leave_id>')
+def view_leave(leave_id):
+    """View detailed leave application information"""
+    if not session.get('user_id'):
+        return redirect(url_for('login'))
+
+    user_id = session.get('user_id')
+    current_user = Emp.query.filter_by(eno=user_id, is_deleted=False).first()
+    leave = Leave.query.filter_by(id=leave_id, is_deleted=False).first()
+    if not leave:
+        flash('Leave application not found', 'danger')
+        return redirect(url_for('leave.list_leaves'))
+
+    if current_user.role != 'admin' and leave.employee_id != user_id:
+        abort(403)
+
+    return render_template('leave/view_leave.html', leave=leave, is_admin=(current_user.role == 'admin'))
+
 @leave_bp.route('/leave/apply', methods=['GET', 'POST'])
 def apply_leave():
     """Apply for leave"""
@@ -127,7 +145,7 @@ def apply_leave():
     for leave_type in LEAVE_BALANCE.keys():
         balances[leave_type] = get_leave_balance(user_id, leave_type)
 
-    return render_template('leave/apply_leave.html', balances=balances)
+    return render_template('leave/apply_leave.html', balances=balances, today=date.today().isoformat())
 
 @leave_bp.route('/leave/<int:leave_id>/approve', methods=['POST'])
 def approve_leave(leave_id):

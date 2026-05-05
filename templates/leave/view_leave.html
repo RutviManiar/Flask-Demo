@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8">
+    <div class="card mb-4">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h4 class="mb-0">Leave Details</h4>
+        <a href="{{ url_for('leave.list_leaves') }}" class="btn btn-secondary btn-sm">Back to List</a>
+      </div>
+      <div class="card-body">
+        <dl class="row">
+          {% if is_admin %}
+          <dt class="col-sm-4">Employee</dt>
+          <dd class="col-sm-8">{{ leave.employee.ename }}</dd>
+          {% endif %}
+
+          <dt class="col-sm-4">Leave Type</dt>
+          <dd class="col-sm-8 text-capitalize">{{ leave.leave_type }}</dd>
+
+          <dt class="col-sm-4">Start Date</dt>
+          <dd class="col-sm-8">{{ leave.start_date.strftime('%Y-%m-%d') }}</dd>
+
+          <dt class="col-sm-4">End Date</dt>
+          <dd class="col-sm-8">{{ leave.end_date.strftime('%Y-%m-%d') }}{% if leave.is_half_day %} <span class="badge bg-info text-dark">Half-day</span>{% endif %}</dd>
+
+          <dt class="col-sm-4">Days Requested</dt>
+          <dd class="col-sm-8">{{ leave.days_requested }}{% if leave.days_requested == 0.5 %} (Half-day){% endif %}</dd>
+
+          <dt class="col-sm-4">Status</dt>
+          <dd class="col-sm-8">
+            {% if leave.status == 'pending' %}
+              <span class="badge bg-warning">Pending</span>
+            {% elif leave.status == 'approved' %}
+              <span class="badge bg-success">Approved</span>
+            {% elif leave.status == 'rejected' %}
+              <span class="badge bg-danger">Rejected</span>
+            {% endif %}
+          </dd>
+
+          <dt class="col-sm-4">Applied On</dt>
+          <dd class="col-sm-8">{{ leave.applied_date.strftime('%Y-%m-%d') }}</dd>
+
+          <dt class="col-sm-4">Reason</dt>
+          <dd class="col-sm-8">{{ leave.reason or 'No reason provided' }}</dd>
+
+          {% if leave.status != 'pending' %}
+          <dt class="col-sm-4">Processed By</dt>
+          <dd class="col-sm-8">{{ leave.approver.ename if leave.approver else 'N/A' }}</dd>
+
+          <dt class="col-sm-4">Processed On</dt>
+          <dd class="col-sm-8">{{ leave.approved_date.strftime('%Y-%m-%d') if leave.approved_date else 'N/A' }}</dd>
+          {% endif %}
+
+          {% if leave.status == 'rejected' and leave.rejection_reason %}
+          <dt class="col-sm-4">Rejection Reason</dt>
+          <dd class="col-sm-8">{{ leave.rejection_reason }}</dd>
+          {% endif %}
+        </dl>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
