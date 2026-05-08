@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, sessio
 from models import db, Leave, Emp
 from datetime import datetime, date
 from sqlalchemy import func
+from holiday_routes import is_holiday_or_weekend
 
 leave_bp = Blueprint('leave', __name__)
 
@@ -42,7 +43,11 @@ def list_leaves():
     if current_user.role == 'admin':
         # Admin sees all leaves
         leaves = Leave.query.filter_by(is_deleted=False).order_by(Leave.applied_date.desc()).all()
-        return render_template('leave/leaves.html', leaves=leaves, is_admin=True)
+        # Calculate own leave balances
+        balances = {}
+        for leave_type in LEAVE_BALANCE.keys():
+            balances[leave_type] = get_leave_balance(user_id, leave_type)
+        return render_template('leave/leaves.html', leaves=leaves, is_admin=True, balances=balances)
     else:
         # Employee sees only their own leaves
         leaves = Leave.query.filter_by(employee_id=user_id, is_deleted=False).order_by(Leave.applied_date.desc()).all()
@@ -79,10 +84,6 @@ def apply_leave():
     user_id = session.get('user_id')
     current_user = Emp.query.filter_by(eno=user_id, is_deleted=False).first()
 
-    if current_user.role == 'admin':
-        flash('Admins cannot apply for leave', 'warning')
-        return redirect(url_for('leave.list_leaves'))
-
     if request.method == 'POST':
         leave_type = request.form['leave_type']
         start_date_str = request.form['start_date']
@@ -105,17 +106,37 @@ def apply_leave():
             flash('Cannot apply for leave in the past', 'danger')
             return redirect(url_for('leave.apply_leave'))
 
-        # Calculate days requested
+        # Calculate days requested (working days only, excluding weekends and holidays)
+        current_date = start_date
+        working_days = 0
+        non_working_dates = []
+
+        while current_date <= end_date:
+            is_non_working, reason = is_holiday_or_weekend(current_date)
+            if is_non_working:
+                non_working_dates.append(f"{current_date.strftime('%Y-%m-%d')} ({reason})")
+            else:
+                working_days += 1
+            current_date += date.resolution
+
+        # For single day leave, check if it's half day
         if start_date == end_date:
-            # Same day leave
+            # Check if the single day is a working day
+            is_non_working, reason = is_holiday_or_weekend(start_date)
+            if is_non_working:
+                flash(f'Cannot apply for leave on {reason}', 'danger')
+                return redirect(url_for('leave.apply_leave'))
             days_requested = 0.5 if is_half_day else 1.0
         else:
-            # Multi-day leave
-            full_days = (end_date - start_date).days + 1
-            days_requested = full_days
+            # Multi-day leave - use working days
+            days_requested = working_days
             if is_half_day:
                 flash('Half-day option is only available for single-day leave', 'warning')
                 return redirect(url_for('leave.apply_leave'))
+
+        # Show information about non-working days
+        if non_working_dates:
+            flash(f'Leave period includes {len(non_working_dates)} non-working day(s): {", ".join(non_working_dates)}. Only {working_days} working day(s) will be deducted from your leave balance.', 'info')
 
         # Check leave balance
         balance = get_leave_balance(user_id, leave_type)
@@ -145,7 +166,7 @@ def apply_leave():
     for leave_type in LEAVE_BALANCE.keys():
         balances[leave_type] = get_leave_balance(user_id, leave_type)
 
-    return render_template('leave/apply_leave.html', balances=balances, today=date.today().isoformat())
+    return render_template('leave/apply_leave.html', balances=balances, today=date.today().isoformat(), is_admin=(current_user.role == 'admin'))
 
 @leave_bp.route('/leave/<int:leave_id>/approve', methods=['POST'])
 def approve_leave(leave_id):
@@ -166,6 +187,11 @@ def approve_leave(leave_id):
 
     if leave.status != 'pending':
         flash('Leave application has already been processed', 'warning')
+        return redirect(url_for('leave.list_leaves'))
+    
+    # Prevent admin from approving their own leave
+    if leave.employee_id == user_id:
+        flash('You cannot approve your own leave application. Please ask another admin to approve it.', 'danger')
         return redirect(url_for('leave.list_leaves'))
 
     leave.status = 'approved'
@@ -195,6 +221,11 @@ def reject_leave(leave_id):
 
     if leave.status != 'pending':
         flash('Leave application has already been processed', 'warning')
+        return redirect(url_for('leave.list_leaves'))
+    
+    # Prevent admin from rejecting their own leave
+    if leave.employee_id == user_id:
+        flash('You cannot reject your own leave application. Please ask another admin to process it.', 'danger')
         return redirect(url_for('leave.list_leaves'))
 
     if request.method == 'POST':

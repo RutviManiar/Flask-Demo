@@ -4,26 +4,27 @@
 <div class="row justify-content-center">
   <div class="col-md-8">
     <div class="card">
-      <div class="card-header">
+      <div class="card-header d-flex justify-content-between align-items-center">
         <h4 class="mb-0">Apply for Leave</h4>
+        <a href="{{ url_for('leave.list_leaves') }}" class="btn btn-secondary btn-sm">Back to List</a>
       </div>
       <div class="card-body">
         <!-- Leave Balance Summary -->
-        <div class="row mb-4">
-          <div class="col-md-12">
-            <h5>Current Leave Balance</h5>
-          </div>
-          {% for leave_type, balance in balances.items() %}
-          <div class="col-md-2">
-            <div class="card bg-light">
-              <div class="card-body text-center">
-                <h6 class="card-title text-capitalize">{{ leave_type }}</h6>
-                <span class="h4 text-primary">{{ balance }}</span>
-                <small class="text-muted d-block">days</small>
+        <div class="mb-4">
+          <h5 class="mb-3">Current Leave Balance</h5>
+          <div class="row g-2">
+            {% for leave_type, balance in balances.items() %}
+            <div class="col-6 col-sm-4 col-lg">
+              <div class="card bg-light h-100">
+                <div class="card-body text-center p-2">
+                  <h6 class="card-title text-capitalize mb-2" style="font-size: 0.9rem; word-wrap: break-word;">{{ leave_type }}</h6>
+                  <div class="h5 text-primary mb-1">{{ balance }}</div>
+                  <small class="text-muted d-block" style="font-size: 0.75rem;">days</small>
+                </div>
               </div>
             </div>
+            {% endfor %}
           </div>
-          {% endfor %}
         </div>
 
         <form method="POST">
@@ -70,7 +71,8 @@
 
           <div class="mb-3">
             <div id="days_calculation" class="alert alert-info" style="display: none;">
-              <strong>Days Requested:</strong> <span id="days_count">0</span> days
+              <strong>Total Days:</strong> <span id="total_days">0</span> |
+              <strong>Working Days (to be deducted):</strong> <span id="working_days_count">0</span>
             </div>
           </div>
 
@@ -93,14 +95,23 @@ function calculateDays() {
 
   if (startDate && endDate && endDate >= startDate) {
     let daysDiff;
+    let totalDays;
+    let workingDays;
+
     if (startDate.getTime() === endDate.getTime()) {
-      // Same day
+      // Same day leave
+      totalDays = 1;
+      workingDays = 1; // Will be validated server-side for holidays
       daysDiff = isHalfDay ? 0.5 : 1;
     } else {
-      // Multi-day
-      daysDiff = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24)) + 1;
+      // Multi-day leave - calculate total and working days
+      totalDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24)) + 1;
+      workingDays = calculateWorkingDays(startDate, endDate);
+      daysDiff = workingDays;
     }
-    document.getElementById('days_count').textContent = daysDiff;
+
+    document.getElementById('total_days').textContent = totalDays;
+    document.getElementById('working_days_count').textContent = daysDiff;
     document.getElementById('days_calculation').style.display = 'block';
 
     // Enable/disable half-day checkbox based on date range
@@ -116,6 +127,27 @@ function calculateDays() {
   } else {
     document.getElementById('days_calculation').style.display = 'none';
   }
+}
+
+// Check if date is weekend (Saturday=6, Sunday=0)
+function isWeekend(date) {
+  return date.getDay() === 0 || date.getDay() === 6;
+}
+
+// Calculate working days between two dates (excluding weekends)
+// Note: Holidays are checked and excluded server-side
+function calculateWorkingDays(startDate, endDate) {
+  let workingDays = 0;
+  const currentDate = new Date(startDate);
+
+  while (currentDate <= endDate) {
+    if (!isWeekend(currentDate)) {
+      workingDays++;
+    }
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+
+  return workingDays;
 }
 
 // Add event listeners

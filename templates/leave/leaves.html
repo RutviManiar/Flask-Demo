@@ -3,16 +3,14 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
   <h2>Leave Management</h2>
-  {% if not is_admin %}
-    <a href="{{ url_for('leave.apply_leave') }}" class="btn btn-primary">Apply for Leave</a>
-  {% endif %}
+  <a href="{{ url_for('leave.apply_leave') }}" class="btn btn-primary">Apply for Leave</a>
 </div>
 
-{% if not is_admin %}
-<!-- Leave Balance Cards -->
+<!-- Leave Balance Cards (if balances exist) -->
+{% if balances %}
 <div class="row mb-4">
   <div class="col-md-12">
-    <h4>Your Leave Balance</h4>
+    <h4>{% if is_admin %}Your Leave Balance{% else %}Your Leave Balance{% endif %}</h4>
   </div>
   {% for leave_type, balance in balances.items() %}
   <div class="col-md-2 mb-3">
@@ -45,7 +43,7 @@
             <th>Leave Type</th>
             <th>Start Date</th>
             <th>End Date</th>
-            <th>Days</th>
+            <th>Working Days<br><small class="text-muted">(deducted)</small></th>
             <th>Status</th>
             <th>Applied Date</th>
             {% if is_admin %}
@@ -64,7 +62,10 @@
             <td class="text-capitalize">{{ leave.leave_type }}</td>
             <td>{{ leave.start_date.strftime('%Y-%m-%d') }}</td>
             <td>{{ leave.end_date.strftime('%Y-%m-%d') }}{% if leave.is_half_day %} <small class="text-muted">(Half-day)</small>{% endif %}</td>
-            <td>{{ leave.days_requested }}{% if leave.days_requested == 0.5 %} (Half-day){% endif %}</td>
+            <td>
+              <strong>{{ leave.days_requested }}</strong>{% if leave.days_requested == 0.5 %} (Half-day){% endif %}
+              <br><small class="text-muted">of {{ ((leave.end_date - leave.start_date).days + 1) }} total days</small>
+            </td>
             <td>
               {% if leave.status == 'pending' %}
                 <span class="badge bg-warning">Pending</span>
@@ -78,17 +79,17 @@
             <td>
                 <div class="btn-group" role="group">
                 <a href="{{ url_for('leave.view_leave', leave_id=leave.id) }}" class="btn btn-sm btn-primary">View</a>
-                {% if is_admin and leave.status == 'pending' %}
+                {% if is_admin and leave.status == 'pending' and leave.employee_id != session.get('user_id') %}
                   <form method="POST" action="{{ url_for('leave.approve_leave', leave_id=leave.id) }}" class="d-inline">
                     <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Approve this leave application?')">Approve</button>
                   </form>
                   <a href="{{ url_for('leave.reject_leave', leave_id=leave.id) }}" class="btn btn-sm btn-danger">Reject</a>
+                {% elif is_admin and leave.status == 'pending' and leave.employee_id == session.get('user_id') %}
+                  <span class="text-muted small">Awaiting other admin approval</span>
                 {% elif not is_admin and leave.status == 'pending' %}
                   <form method="POST" action="{{ url_for('leave.cancel_leave', leave_id=leave.id) }}" class="d-inline">
                     <button type="submit" class="btn btn-sm btn-warning" onclick="return confirm('Cancel this leave application?')">Cancel</button>
                   </form>
-                {% elif leave.status == 'rejected' and leave.rejection_reason %}
-                  <button class="btn btn-sm btn-info" data-bs-toggle="tooltip" title="{{ leave.rejection_reason }}">Reason</button>
                 {% endif %}
               </div>
             </td>

@@ -16,6 +16,7 @@ from payroll_routes import payroll_bp
 from chatbot_routes import chatbot_bp
 from announcement_routes import announcement_bp
 from leave_routes import leave_bp, get_leave_balance, LEAVE_BALANCE
+from holiday_routes import holiday_bp
 
 app = Flask(__name__)
 load_dotenv()  # loads .env from project root
@@ -57,6 +58,7 @@ app.register_blueprint(payroll_bp)
 app.register_blueprint(chatbot_bp)
 app.register_blueprint(announcement_bp)
 app.register_blueprint(leave_bp)
+app.register_blueprint(holiday_bp)
 
 
 @app.context_processor

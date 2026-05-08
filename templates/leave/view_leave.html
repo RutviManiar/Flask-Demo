@@ -25,7 +25,13 @@
           <dd class="col-sm-8">{{ leave.end_date.strftime('%Y-%m-%d') }}{% if leave.is_half_day %} <span class="badge bg-info text-dark">Half-day</span>{% endif %}</dd>
 
           <dt class="col-sm-4">Days Requested</dt>
-          <dd class="col-sm-8">{{ leave.days_requested }}{% if leave.days_requested == 0.5 %} (Half-day){% endif %}</dd>
+          <dd class="col-sm-8">
+            {{ leave.days_requested }}{% if leave.days_requested == 0.5 %} (Half-day){% endif %}
+            <small class="text-muted d-block">
+              Total calendar days: {{ ((leave.end_date - leave.start_date).days + 1) }} |
+              Working days deducted: {{ leave.days_requested }}
+            </small>
+          </dd>
 
           <dt class="col-sm-4">Status</dt>
           <dd class="col-sm-8">

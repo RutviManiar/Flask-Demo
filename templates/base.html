@@ -18,6 +18,7 @@
         <a href="{{ url_for('index') }}" class="btn btn-outline-light btn-sm">🏠 Dashboard</a>
         <a href="{{ url_for('announcement.list_announcements') }}" class="btn btn-outline-light btn-sm">📢 Announcements</a>
         <a href="{{ url_for('leave.list_leaves') }}" class="btn btn-outline-light btn-sm">📅 Leave</a>
+        <a href="{{ url_for('holiday.list_holidays') }}" class="btn btn-outline-light btn-sm">🎉 Holidays</a>
         <div style="border-left:1px solid #fff; height:24px;"></div>
         <a href="{{ url_for('logout') }}" class="btn btn-outline-light btn-sm">Logout</a>
         {% if current_user %}
@@ -47,6 +48,7 @@
         <a href="{{ url_for('dept.report') }}" class="btn btn-outline-light btn-sm">Reports</a>
         <a href="{{ url_for('announcement.list_announcements') }}" class="btn btn-outline-light btn-sm">📢 Announcements</a>
         <a href="{{ url_for('leave.list_leaves') }}" class="btn btn-outline-light btn-sm">📅 Leave</a>
+        <a href="{{ url_for('holiday.list_holidays') }}" class="btn btn-outline-light btn-sm">🎉 Holidays</a>
         <div style="border-left:1px solid #fff; height:24px;"></div>
         
           <a href="{{ url_for('logout') }}" class="btn btn-outline-light btn-sm">Logout</a>
