@@ -89,7 +89,7 @@ def apply_leave():
         start_date_str = request.form['start_date']
         end_date_str = request.form['end_date']
         is_half_day = request.form.get('is_half_day') == 'on'
-        reason = request.form.get('reason', '')
+        user_reason = request.form.get('reason', '').strip()
 
         try:
             start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
@@ -112,9 +112,9 @@ def apply_leave():
         non_working_dates = []
 
         while current_date <= end_date:
-            is_non_working, reason = is_holiday_or_weekend(current_date)
+            is_non_working, non_working_reason = is_holiday_or_weekend(current_date)
             if is_non_working:
-                non_working_dates.append(f"{current_date.strftime('%Y-%m-%d')} ({reason})")
+                non_working_dates.append(f"{current_date.strftime('%Y-%m-%d')} ({non_working_reason})")
             else:
                 working_days += 1
             current_date += date.resolution
@@ -122,9 +122,9 @@ def apply_leave():
         # For single day leave, check if it's half day
         if start_date == end_date:
             # Check if the single day is a working day
-            is_non_working, reason = is_holiday_or_weekend(start_date)
+            is_non_working, non_working_reason = is_holiday_or_weekend(start_date)
             if is_non_working:
-                flash(f'Cannot apply for leave on {reason}', 'danger')
+                flash(f'Cannot apply for leave on {non_working_reason}', 'danger')
                 return redirect(url_for('leave.apply_leave'))
             days_requested = 0.5 if is_half_day else 1.0
         else:
@@ -152,7 +152,7 @@ def apply_leave():
             end_date=end_date,
             days_requested=days_requested,
             is_half_day=is_half_day,
-            reason=reason
+            reason=user_reason
         )
 
         db.session.add(leave)
