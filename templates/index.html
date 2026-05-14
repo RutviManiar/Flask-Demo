@@ -3,13 +3,16 @@
 
 {% if is_admin %}
   <!-- ADMIN DASHBOARD -->
+    <div class="col-md-8">
+      <h3 class="mb-4">Welcome, {{ current_user.ename }}! 👋</h3>
+    </div>
   <div class="text-center mt-5">
-    <h1 class="mb-4">Flask CRUD Dashboard</h1>
-    <a href="{{ url_for('dept.list_depts') }}" class="btn btn-primary btn-lg me-2">Manage Departments</a>
-    <a href="{{ url_for('emp.list_emps') }}" class="btn btn-primary btn-lg me-2">Manage Employees</a>
-    <a href="{{ url_for('att.list_attendance') }}" class="btn btn-primary btn-lg me-2">Manage Attendance</a>
-    <a href="{{ url_for('payroll.list_payroll') }}" class="btn btn-primary btn-lg me-2">Manage Payroll</a>
-    <a href="{{ url_for('leave.list_leaves') }}" class="btn btn-primary btn-lg me-2">Manage Leave</a>
+    <h2 class="mb-4">Payroll Dashboard</h2>
+    <a href="{{ url_for('dept.list_depts') }}" class="btn btn-primary btn-lg me-2">Departments</a>
+    <a href="{{ url_for('emp.list_emps') }}" class="btn btn-primary btn-lg me-2">Employees</a>
+    <a href="{{ url_for('att.list_attendance') }}" class="btn btn-primary btn-lg me-2">Attendance</a>
+    <a href="{{ url_for('payroll.list_payroll') }}" class="btn btn-primary btn-lg me-2">Payroll</a>
+    <a href="{{ url_for('leave.list_leaves') }}" class="btn btn-primary btn-lg me-2">Leave</a>
     <a href="{{ url_for('chatbot.home') }}" class="btn btn-primary btn-lg me-2">Chatbot</a>
   </div>
 
@@ -116,7 +119,7 @@
   <!-- EMPLOYEE DASHBOARD -->
   <div class="row">
     <div class="col-md-8">
-      <h1 class="mb-4">Welcome, {{ current_user.ename }}! 👋</h1>
+      <h3 class="mb-4">Welcome, {{ current_user.ename }}! 👋</h3>
       
       <!-- Employee Profile Card -->
       <div class="card mb-4 shadow">

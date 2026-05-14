@@ -1,0 +1,13 @@
+flask
+numpy
+pandas
+pillow
+deepface
+psycopg2
+flask_sqlalchemy 
+PyMySQL
+flask-migrate
+Flask-MySqldb
+tensorflow
+tf-keras
+fpdf
