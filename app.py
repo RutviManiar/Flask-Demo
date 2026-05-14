@@ -159,8 +159,8 @@ def login():
             session['user_email'] = user.email
             session['user_role'] = user.role
             # Redirect regular users directly to their own edit page
-            if user.role == 'user':
-                return redirect(url_for('emp.edit_emp', eno=user.eno))
+#            if user.role == 'user':
+#                return redirect(url_for('index'))
             return redirect(url_for('index'))
 
     return render_template('login.html', error=error)
