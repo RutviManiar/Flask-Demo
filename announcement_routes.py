@@ -1,12 +1,54 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash, jsonify
 from models import db, Announcement, AnnouncementComment, Emp
-from datetime import datetime
+from datetime import datetime, date
+from sqlalchemy import and_, func
 
 announcement_bp = Blueprint('announcement', __name__)
+
+
+def create_birthday_announcements():
+    """Check for birthdays today and create automatic announcements"""
+    today = date.today()
+    
+    # Get all employees with birth dates where it's their birthday today
+    # Match on month and day only (birth_date day-month = today's day-month)
+    birthdays_today = Emp.query.filter(
+        Emp.birth_date != None,
+        Emp.is_deleted == False,
+        # Extract month and day from birth_date and compare with today
+        func.month(Emp.birth_date) == today.month,
+        func.day(Emp.birth_date) == today.day
+    ).all()
+    
+    # For each birthday today, create an announcement if one doesn't already exist
+    for employee in birthdays_today:
+        announcement_title = f'🎉 {employee.ename} Birthday'
+
+        existing = Announcement.query.filter(
+            Announcement.is_deleted == False,
+            func.date(Announcement.created_at) == today,
+            Announcement.title == announcement_title
+        ).first()
+
+        if not existing:
+            admin_user = Emp.query.filter_by(role='admin', is_deleted=False).first()
+            if admin_user:
+                announcement = Announcement(
+                    title=announcement_title,
+                    content=f"Today is {employee.ename}'s birthday! Please join us in wishing them a wonderful day filled with joy and happiness!",
+                    created_by=admin_user.eno
+                )
+                db.session.add(announcement)
+    
+    db.session.commit()
+
 
 @announcement_bp.route('/announcements')
 def list_announcements():
     """List all announcements"""
+    # Check for birthdays and create announcements if needed
+    create_birthday_announcements()
+    
     page = request.args.get('page', 1, type=int)
     announcements = (
         Announcement.query

@@ -42,7 +42,7 @@
                     </h5>
                     <p class="card-text text-muted small">
                       <strong>By:</strong> {{ announcement.creator.ename }} | 
-                      <strong>Posted:</strong> {{ announcement.created_at.strftime('%Y-%m-%d %H:%M') }}
+                      <strong>Posted:</strong> {{ announcement.created_at.strftime('%Y-%m-%d') }}
                     </p>
                     <p class="card-text">{{ announcement.content[:150] }}...</p>
                     <div class="d-flex gap-2 align-items-center">

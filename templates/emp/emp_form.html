@@ -40,6 +40,18 @@
     </div>
 
     <div class="mb-3">
+      <label class="form-label">Birth Date</label>
+      <input
+        type="date"
+        name="birth_date"
+        class="form-control"
+        value="{{ emp.birth_date.strftime('%Y-%m-%d') if emp and emp.birth_date else '' }}"
+        max="{{ max_birth_date }}"
+      >
+      <small class="text-muted">Employee must be at least 18 years old.</small>
+    </div>
+
+    <div class="mb-3">
       <label class="form-label">Profile Image</label>
       {% if emp and emp.image %}
       <div class="mb-2">

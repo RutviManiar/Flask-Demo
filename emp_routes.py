@@ -1,7 +1,27 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash, Response, abort
+from datetime import datetime, date
 
 from models import db, Emp, Dept
 from utils import send_email
+
+
+def get_minimum_birth_date():
+    today = date.today()
+    try:
+        return today.replace(year=today.year - 18)
+    except ValueError:
+        # Handle leap day birthdays
+        return today.replace(year=today.year - 18, day=28)
+
+
+def parse_birth_date(birth_date_str):
+    if not birth_date_str:
+        return None
+    try:
+        return datetime.strptime(birth_date_str, '%Y-%m-%d').date()
+    except ValueError:
+        return None
+
 
 emp_bp = Blueprint('emp', __name__)
 
@@ -37,6 +57,15 @@ def add_emp():
         role = request.form.get('role', 'user')
         deptid = request.form['deptid']
         is_deleted = request.form.get('is_deleted') == 'false'
+        
+        # Parse birth date
+        birth_date = parse_birth_date(request.form.get('birth_date', '').strip())
+        if request.form.get('birth_date', '').strip() and not birth_date:
+            error = 'Invalid birth date format.'
+
+        min_birth_date = get_minimum_birth_date()
+        if birth_date and birth_date > min_birth_date:
+            error = 'Employee must be at least 18 years old.'
 
         image_file = request.files.get('image')
         image_data = None
@@ -59,6 +88,7 @@ def add_emp():
                 deptid=deptid,
                 is_deleted=is_deleted,
                 image=image_data,
+                birth_date=birth_date,
             )
             db.session.add(new_emp)
             db.session.commit()
@@ -83,7 +113,13 @@ def add_emp():
 
             return redirect(url_for('emp.list_emps'))
 
-    return render_template('emp/emp_form.html', depts=depts, action="Add", error=error)
+    return render_template(
+        'emp/emp_form.html',
+        depts=depts,
+        action="Add",
+        error=error,
+        max_birth_date=get_minimum_birth_date().isoformat(),
+    )
 
 
 @emp_bp.route('/emp/edit/<int:eno>', methods=['GET', 'POST'])
@@ -103,10 +139,19 @@ def edit_emp(eno):
             if existing:
                 error = "Email is already in use. Please choose another."
 
+        birth_date = parse_birth_date(request.form.get('birth_date', '').strip())
+        if request.form.get('birth_date', '').strip() and not birth_date:
+            error = 'Invalid birth date format.'
+
+        min_birth_date = get_minimum_birth_date()
+        if birth_date and birth_date > min_birth_date:
+            error = 'Employee must be at least 18 years old.'
+
         if not error:
             emp.ename = request.form['ename']
             emp.email = email
             emp.phone = request.form.get('phone')
+            emp.birth_date = birth_date
 
             image_file = request.files.get('image')
             if image_file and image_file.filename:
@@ -129,7 +174,14 @@ def edit_emp(eno):
                 return redirect(url_for('emp.edit_emp', eno=eno))
             return redirect(url_for('emp.list_emps'))
 
-    return render_template('emp/emp_form.html', emp=emp, depts=depts, action="Edit", error=error)
+    return render_template(
+        'emp/emp_form.html',
+        emp=emp,
+        depts=depts,
+        action="Edit",
+        error=error,
+        max_birth_date=get_minimum_birth_date().isoformat(),
+    )
 
 
 @emp_bp.route('/emp/delete/<int:eno>')

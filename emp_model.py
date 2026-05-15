@@ -1,4 +1,5 @@
 from models import db
+from datetime import date
 
 class Emp(db.Model):
     __tablename__ = "emp"
@@ -19,5 +20,6 @@ class Emp(db.Model):
     # Use MEDIUMBLOB in MySQL so larger images can be stored (default BLOB is limited to 64KB).
     # If you plan to store very large files, you can use LONGBLOB instead.
     image = db.Column(db.LargeBinary(length=(2**24 - 1)), nullable=True)  # ~16MB
+    birth_date = db.Column(db.Date, nullable=True)  # Employee birth date for birthday announcements
     def __repr__(self):
         return f"<Employee {self.eno} {self.ename} {self.sal} Dept:{self.deptid}>"
